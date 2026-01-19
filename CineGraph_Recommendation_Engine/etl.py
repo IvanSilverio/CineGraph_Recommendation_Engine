@@ -15,10 +15,10 @@ PARAMS_BASE = {"api_key": API_KEY, "language": "pt-BR"}
 
 def get_db_connection():
     return psycopg2.connect(
-        dbname=DB_NAME,
-        user=os.getenv("DB_USER"),
+        dbname="cinegraph_db",
+        user="postgres",
         password=os.getenv("DB_PASSWORD"),
-        host="192.168.0.154",
+        host="localhost",
         port="5432"
     )
 
