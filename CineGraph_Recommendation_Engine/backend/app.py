@@ -27,8 +27,8 @@ def startup_event():
     global grafo
     print("A iniciar servidor... Carregando grafo...")
     try:
-        atores, generos = carregar_dados_grafo()
-        grafo = construir_grafo(atores, generos)
+        atores, generos, diretores, keywords = carregar_dados_grafo()
+        grafo = construir_grafo(atores, generos, diretores, keywords)
         print("Grafo carregado com sucesso!")
     except Exception as e:
         print(f"Erro ao carregar grafo: {e}")

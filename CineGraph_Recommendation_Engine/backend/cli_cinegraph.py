@@ -6,12 +6,12 @@ if __name__ == "__main__":
     print("\n=== CINEGRAPH: SISTEMA DE RECOMENDAÇÃO (CLI) ===")
     
     # 1. Preparação
-    dados_atores, dados_generos = carregar_dados_grafo()
+    dados_atores, dados_generos, dados_diretores, dados_keywords = carregar_dados_grafo()
     if not dados_atores:
         print("Erro: Banco vazio. Rode o ETL primeiro.")
         exit()
         
-    grafo = construir_grafo(dados_atores, dados_generos)
+    grafo = construir_grafo(dados_atores, dados_generos, dados_diretores, dados_keywords)
     print(f"-> Sistema pronto! {grafo.number_of_nodes()} nós conectados.\n")
     
     # 2. Loop Infinito (Menu)

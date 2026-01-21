@@ -5,26 +5,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def criar_tabelas():
-    # Conecta no Localhost (Linux)
+    # Conecta no 127.0.0.1 para compatibilidade total
     conn = psycopg2.connect(
         dbname="cinegraph_db",
-        user="postgres",
+        user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         host="127.0.0.1",
         port="5432"
     )
     cur = conn.cursor()
-
-    print("--- 1. Resetando o banco (Apagando tabelas antigas)...")
-    cur.execute("DROP TABLE IF EXISTS movie_genres CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS movie_actors CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS genres CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS actors CASCADE;")
-    cur.execute("DROP TABLE IF EXISTS movies CASCADE;")
-
-    print("--- 2. Criando tabelas NOVAS (Com colunas extras)...")
     
-    # 1. Tabela de Filmes
+    # 1. Tabela Principal
     cur.execute("""
         CREATE TABLE movies (
             movie_id INTEGER PRIMARY KEY,
@@ -36,23 +27,15 @@ def criar_tabelas():
         );
     """)
 
-    # 2. Tabela de Atores
-    cur.execute("""
-        CREATE TABLE actors (
-            actor_id INTEGER PRIMARY KEY,
-            name VARCHAR(255)
-        );
-    """)
+    # 2. Entidades Secundárias
+    cur.execute("CREATE TABLE actors (actor_id INTEGER PRIMARY KEY, name VARCHAR(255));")
+    cur.execute("CREATE TABLE genres (genre_id INTEGER PRIMARY KEY, name VARCHAR(100));")
+    
+    # NOVAS TABELAS
+    cur.execute("CREATE TABLE directors (director_id INTEGER PRIMARY KEY, name VARCHAR(255));")
+    cur.execute("CREATE TABLE keywords (keyword_id INTEGER PRIMARY KEY, name VARCHAR(255));")
 
-    # 3. Tabela de Gêneros
-    cur.execute("""
-        CREATE TABLE genres (
-            genre_id INTEGER PRIMARY KEY,
-            name VARCHAR(100)
-        );
-    """)
-
-    # 4. Ligação Filme <-> Ator 
+    # 3. Tabelas de Relacionamento (Links)
     cur.execute("""
         CREATE TABLE movie_actors (
             movie_id INTEGER REFERENCES movies(movie_id),
@@ -62,7 +45,6 @@ def criar_tabelas():
         );
     """)
 
-    # 5. Ligação Filme <-> Gênero
     cur.execute("""
         CREATE TABLE movie_genres (
             movie_id INTEGER REFERENCES movies(movie_id),
@@ -70,11 +52,28 @@ def criar_tabelas():
             PRIMARY KEY (movie_id, genre_id)
         );
     """)
+    
+    # Novos links
+    cur.execute("""
+        CREATE TABLE movie_directors (
+            movie_id INTEGER REFERENCES movies(movie_id),
+            director_id INTEGER REFERENCES directors(director_id),
+            PRIMARY KEY (movie_id, director_id)
+        );
+    """)
+    
+    cur.execute("""
+        CREATE TABLE movie_keywords (
+            movie_id INTEGER REFERENCES movies(movie_id),
+            keyword_id INTEGER REFERENCES keywords(keyword_id),
+            PRIMARY KEY (movie_id, keyword_id)
+        );
+    """)
 
     conn.commit()
     cur.close()
     conn.close()
-    print("SUCESSO!")
+    print("Banco de dados criado!")
 
 if __name__ == "__main__":
     criar_tabelas()

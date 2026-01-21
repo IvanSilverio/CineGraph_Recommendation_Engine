@@ -95,6 +95,37 @@ def salvar_atores(cursor, movie_id, cast_list):
         
         cursor.execute(sql_link, (movie_id, actor['id'], character))
 
+def salvar_diretores(cursor, movie_id, crew_list):
+    """Filtra a lista da equipe técnica para pegar apenas o Diretor."""
+    for crew_member in crew_list:
+        if crew_member['job'] == 'Director':
+            # 1. Salva Diretor
+            cursor.execute("""
+                INSERT INTO directors (director_id, name) VALUES (%s, %s)
+                ON CONFLICT (director_id) DO NOTHING;
+            """, (crew_member['id'], crew_member['name']))
+            
+            # 2. Link Filme-Diretor
+            cursor.execute("""
+                INSERT INTO movie_directors (movie_id, director_id) VALUES (%s, %s)
+                ON CONFLICT (movie_id, director_id) DO NOTHING;
+            """, (movie_id, crew_member['id']))
+
+def salvar_keywords(cursor, movie_id, keywords_list):
+    """Salva as palavras-chave do filme."""
+    for kw in keywords_list:
+        # 1. Salva Keyword
+        cursor.execute("""
+            INSERT INTO keywords (keyword_id, name) VALUES (%s, %s)
+            ON CONFLICT (keyword_id) DO NOTHING;
+        """, (kw['id'], kw['name']))
+        
+        # 2. Link Filme-Keyword
+        cursor.execute("""
+            INSERT INTO movie_keywords (movie_id, keyword_id) VALUES (%s, %s)
+            ON CONFLICT (movie_id, keyword_id) DO NOTHING;
+        """, (movie_id, kw['id']))
+
 def run_etl():
     """
     Função Principal do Pipeline ETL (Extract, Transform, Load).
@@ -147,7 +178,7 @@ def run_etl():
                 
             # Commit a cada página para salvar o progresso
             conn.commit() 
-            print(f"✅ Página {pagina} processada e salva.")
+            print(f" Página {pagina} processada e salva.")
 
     except Exception as e:
         print(f"Erro crítico na execução: {e}")

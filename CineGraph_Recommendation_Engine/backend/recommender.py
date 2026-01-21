@@ -17,51 +17,54 @@ def get_db_connection():
     )
 
 def carregar_dados_grafo():
-    """
-    Busca os dados brutos (Nós e Arestas) do banco de dados.
-    Retorna duas listas:
-    1. filmes_atores: [(id_filme, nome_ator), ...]
-    2. filmes_generos: [(id_filme, nome_genero), ...]
-    """
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # 1. Busca conexões Filme-Ator
-    cur.execute("""
-        SELECT m.movie_id, a.name
-        FROM movies m
-        JOIN movie_actors ma ON m.movie_id = ma.movie_id
-        JOIN actors a ON ma.actor_id = a.actor_id
-    """)
+    # 1. Atores
+    cur.execute("""SELECT m.movie_id, a.name 
+        FROM movies m 
+        JOIN movie_actors ma ON m.movie_id = ma.movie_id 
+        JOIN actors a ON ma.actor_id = a.actor_id""")
     filmes_atores = cur.fetchall()
 
-    # 2. Busca conexões Filme-Gênero
-    cur.execute("""
-        SELECT m.movie_id, g.name
-        FROM movies m
-        JOIN movie_genres mg ON m.movie_id = mg.movie_id
-        JOIN genres g ON mg.genre_id = g.genre_id
-    """)
+    # 2. Gêneros
+    cur.execute("""SELECT m.movie_id, g.name 
+        FROM movies m 
+        JOIN movie_genres mg ON m.movie_id = mg.movie_id 
+        JOIN genres g ON mg.genre_id = g.genre_id""")
     filmes_generos = cur.fetchall()
     
-    conn.close()
-    return filmes_atores, filmes_generos
-
-def construir_grafo(filmes_atores, filmes_generos):
-    """
-    Transforma listas de dados em um Grafo NetworkX com pesos ponderados
+    # 3. Diretores
+    cur.execute("""SELECT m.movie_id, d.name 
+                FROM movies m 
+                JOIN movie_directors md ON m.movie_id = md.movie_id 
+                JOIN directors d ON md.director_id = d.director_id""")
+    filmes_diretores = cur.fetchall()
     
-    Lógica de Pesos:
-    - Atores (Peso 3.0): Definem muito o estilo do filme. Conexão forte.
-    - Gêneros (Peso 0.5): São muito comuns (ex: Drama). Conexão fraca para evitar ruído.
-    """
+    # 4. Keywords
+    cur.execute("""SELECT m.movie_id, k.name 
+                FROM movies m 
+                JOIN movie_keywords mk ON m.movie_id = mk.movie_id 
+                JOIN keywords k ON mk.keyword_id = k.keyword_id""")
+    filmes_keywords = cur.fetchall()
+    
+    conn.close()
+    # Retorna os 4 conjuntos de dados
+    return filmes_atores, filmes_generos, filmes_diretores, filmes_keywords
+
+def construir_grafo(filmes_atores, filmes_generos, filmes_diretores, filmes_keywords):
     G = nx.Graph()
     
-    for movie_id, actor_name in filmes_atores:
-        G.add_edge(movie_id, actor_name, weight=3.0)
+    # TABELA DE PESOS
+    PESO_DIRETOR = 5.0  # Muito forte!
+    PESO_ATOR    = 3.0  # Forte
+    PESO_KEYWORD = 2.0  # Médio (Bom para nichos)
+    PESO_GENERO  = 0.5  # Fraco (Muito genérico)
     
-    for movie_id, genre_name in filmes_generos:
-        G.add_edge(movie_id, genre_name, weight=0.5)
+    for movie_id, actor_name in filmes_atores:    G.add_edge(movie_id, actor_name, weight=PESO_ATOR)
+    for movie_id, genre_name in filmes_generos:   G.add_edge(movie_id, genre_name, weight=PESO_GENERO)
+    for movie_id, director_name in filmes_diretores: G.add_edge(movie_id, director_name, weight=PESO_DIRETOR)
+    for movie_id, keyword_name in filmes_keywords:  G.add_edge(movie_id, keyword_name, weight=PESO_KEYWORD)
         
     return G
 
@@ -148,6 +151,6 @@ def buscar_info_filmes(ids_filmes):
 if __name__ == "__main__":
     # Teste rápido ao rodar o arquivo diretamente
     print("--- Teste de Recomendação ---")
-    dados_atores, dados_generos = carregar_dados_grafo()
-    grafo = construir_grafo(dados_atores, dados_generos)
+    dados_atores, dados_generos, dados_diretores, dados_keywords = carregar_dados_grafo()
+    grafo = construir_grafo(dados_atores, dados_generos, dados_diretores, dados_keywords)
     print(recomendar_filmes(grafo, 278))
