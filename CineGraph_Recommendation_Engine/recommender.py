@@ -1,149 +1,120 @@
-import os
 import psycopg2
 import networkx as nx
+import os
 from dotenv import load_dotenv
-from collections import Counter
 
-# Carrega variáveis de ambiente
 load_dotenv()
 
-# Configurações do Banco de Dados
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "cinegraph_db")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASS = os.getenv("DB_PASSWORD")
-
 def get_db_connection():
-    
-    #Estabelece conexão com o banco de dados PostgreSQL
-    
-    try:
-        return psycopg2.connect(
-            host=DB_HOST,
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASS,
-            port="5432"
-        )
-    except psycopg2.Error as e:
-        print(f"Erro ao conectar ao banco de dados: {e}")
-        exit(1)
+    # Copie a mesma função de conexão do seu etl.py
+    return psycopg2.connect(
+        dbname="cinegraph_db",
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host="192.168.0.154",
+        port="5432"
+    )
 
 def carregar_dados_grafo():
-    """
-    Busca os relacionamentos (Filme-Ator e Filme-Gênero) no banco de dados.
-    Retorna duas listas de tuplas.
-    """
+    
     conn = get_db_connection()
     cur = conn.cursor()
     
-    print(f"[INFO] Carregando dados do banco {DB_NAME}...")
-
-    # Busca relacionamentos Filme <-> Ator
+    # QUERY 1: Busque todos os pares de Filme e Ator.
+    # DICA: Faça um JOIN entre movies, movie_actors e actors.
+    # Retorne algo como: [(ID_Filme, Nome_Ator), (ID_Filme, Nome_Ator)...]
+    
     cur.execute("""
-        SELECT m.movie_id, a.name
-        FROM movies m
-        JOIN movie_actors ma ON m.movie_id = ma.movie_id
-        JOIN actors a ON ma.actor_id = a.actor_id
-    """)
+    SELECT m.movie_id, a.name
+    FROM movies m
+    JOIN movie_actors ma ON m.movie_id = ma.movie_id
+    JOIN actors a ON ma.actor_id = a.actor_id
+    """
+    ) 
+    
     filmes_atores = cur.fetchall()
 
-    # Busca relacionamentos Filme <-> Gênero
+    # QUERY 2: Busque todos os pares de Filme e Gênero.
+    # DICA: JOIN entre movies, movie_genres e genres.
     cur.execute("""
-        SELECT m.movie_id, g.name
-        FROM movies m
-        JOIN movie_genres mg ON m.movie_id = mg.movie_id
-        JOIN genres g ON mg.genre_id = g.genre_id
+    SELECT m.movie_id, g.name
+    FROM movies m
+    JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    JOIN genres g ON mg.genres_id = g.actor_id
     """)
     filmes_generos = cur.fetchall()
     
-    cur.close()
     conn.close()
     
-    print(f"[INFO] Dados carregados: {len(filmes_atores)} atores vinculados e {len(filmes_generos)} gêneros vinculados.")
+    print (filmes_atores, filmes_generos)
     return filmes_atores, filmes_generos
 
 def construir_grafo(filmes_atores, filmes_generos):
     """
-    Constrói um grafo usando NetworkX.
-    Nós: Filmes (int), Atores (str), Gêneros (str).
-    Arestas: Conexões entre Filmes e suas propriedades.
+    Recebe os dados brutos e cria o objeto Grafo do NetworkX.
     """
-    G = nx.Graph()
-    print("[INFO] Construindo estrutura do grafo...")
+    G = nx.Graph() # Inicializa um grafo não-direcionado
 
-    # Adiciona arestas Filme <-> Ator
+    print("Construindo o grafo...")
+
+    # PARTE 1: Adicionar arestas de Atores
     for movie_id, actor_name in filmes_atores:
-        G.add_edge(movie_id, actor_name)
+        # No NetworkX, você adiciona uma aresta assim: G.add_edge(no1, no2)
+        # O 'no1' será o ID do filme (ex: 550)
+        # O 'no2' será o nome do ator (ex: "Brad Pitt")
+        
+        # SEU CODIGO AQUI: Adicione a aresta entre filme e ator
+        pass
 
-    # Adiciona arestas Filme <-> Gênero
+    # PARTE 2: Adicionar arestas de Gêneros
     for movie_id, genre_name in filmes_generos:
-        G.add_edge(movie_id, genre_name)
+        # SEU CODIGO AQUI: Adicione a aresta entre filme e gênero
+        pass
     
     return G
 
 def recomendar_filmes(G, movie_id_alvo, top_n=5):
     """
-    Realiza recomendação baseada em filtragem colaborativa (vizinhos de segundo grau)
-    
-        G: O grafo NetworkX.
-        movie_id_alvo: ID do filme base.
-        top_n: Quantidade de recomendações desejadas.
-        
-    Returns:
-        Lista de tuplas (movie_id, pontuação).
+    A mágica acontece aqui.
+    Dado um movie_id, quais outros movie_ids compartilham mais vizinhos?
     """
+    
     if not G.has_node(movie_id_alvo):
-        print(f"[AVISO] O filme ID {movie_id_alvo} não foi encontrado no grafo.")
-        return []
+        return "Filme não encontrado no grafo."
 
-    # 1. Identifica características do filme (Atores e Gêneros)
-    # Primeiro Grau: Filme -> [Ator A, Gênero B, ...]
-    vizinhos_do_alvo = list(G.neighbors(movie_id_alvo))
+    # 1. Pegar os vizinhos do filme alvo (Atores e Gêneros)
+    # DICA: Use list(G.neighbors(no))
+    vizinhos_do_alvo = [] # Preencha isso
 
+    # 2. Encontrar filmes candidatos
+    # Para cada vizinho (ex: 'Brad Pitt'), pegue os filmes que ele fez.
     candidatos = []
     
-    # 2. Busca filmes que compartilham essas características
-    # Segundo Grau: [Ator A] -> Filme X, Filme Y
     for vizinho in vizinhos_do_alvo:
-        vizinhos_de_segundo_grau = list(G.neighbors(vizinho))
+        # Pegue os vizinhos do vizinho (os outros filmes)
+        vizinhos_de_segundo_grau = [] # Preencha isso
         candidatos.extend(vizinhos_de_segundo_grau)
-        
-    # 3. Filtra a lista
-    # Remove o próprio filme alvo e garante que retornamos apenas IDs de filmes (int)
-    candidatos_validos = [
-        c for c in candidatos 
-        if c != movie_id_alvo and isinstance(c, int)
-    ]
 
-    # 4. Classifica por frequência (similaridade)
-    contagem = Counter(candidatos_validos)
+    # 3. Contar frequência (Ranking simples)
+    # Se o filme X aparece 5 vezes na lista de candidatos, ele tem 5 conexões em comum.
+    # DICA: Use a classe Counter do python (from collections import Counter)
     
-    return contagem.most_common(top_n)
+    # SEU CODIGO AQUI para contar e ordenar
+    
+    return [] # Retorne o top N
 
 if __name__ == "__main__":
-    # --- Execução Principal ---
-    
-    # 1. Carregamento e Construção
+    # 1. Carrega dados
     dados_atores, dados_generos = carregar_dados_grafo()
     
-    if not dados_atores:
-        print("[ERRO] Nenhum dado encontrado. Verifique se o ETL foi executado.")
-        exit(1)
-
+    # 2. Cria Grafo
     grafo = construir_grafo(dados_atores, dados_generos)
-    print(f"[INFO] Grafo pronto com {grafo.number_of_nodes()} nós e {grafo.number_of_edges()} conexões.")
     
-    # 2. Exemplo de Uso (Teste)
-    # ID 278: Um Sonho de Liberdade (Shawshank Redemption)
-    id_teste = 278 
+    print(f"Grafo criado com {grafo.number_of_nodes()} nós e {grafo.number_of_edges()} conexões.")
     
-    print(f"\n--- Gerando recomendações para o filme ID: {id_teste} ---")
-    recomendacoes = recomendar_filmes(grafo, id_teste)
+    # 3. Testa recomendação
+    # Escolha um ID de filme que você sabe que existe no seu banco (ex: O Poderoso Chefão)
+    filme_teste = 238 # Verifique se esse ID existe no seu banco
+    recomendacoes = recomendar_filmes(grafo, filme_teste)
     
-    if recomendacoes:
-        print(f"Top recomendações encontradas:")
-        for i, (filme_id, score) in enumerate(recomendacoes, 1):
-            print(f"{i}. Filme ID {filme_id} (Score de similaridade: {score})")
-    else:
-        print("Nenhuma recomendação encontrada ou filme inexistente.")
+    print(f"Recomendações para o filme {filme_teste}: {recomendacoes}")
