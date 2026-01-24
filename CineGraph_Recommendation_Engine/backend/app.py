@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from recommender import carregar_dados_grafo, construir_grafo, recomendar_filmes, buscar_info_filmes, get_db_connection
+from recommender import carregar_dados_grafo, construir_grafo, recomendar_filmes, buscar_info_filmes, get_db_connection, buscar_filmes_por_nome
 
 app = FastAPI()
 
@@ -72,3 +72,9 @@ def recommend(movie_id: int):
         })
         
     return {"results": resposta_final}
+
+        
+@app.get("/api/search")
+def search_movies(query: str):
+    filmes = buscar_filmes_por_nome(query)
+    return {"results": filmes}

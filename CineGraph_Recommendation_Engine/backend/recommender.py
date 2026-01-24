@@ -12,7 +12,7 @@ def get_db_connection():
         dbname="cinegraph_db",
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        host="localhost",
+        host="127.0.0.1",
         port="5432"
     )
 
@@ -148,9 +148,44 @@ def buscar_info_filmes(ids_filmes):
         
     return filmes_dict
 
+def buscar_filmes_por_nome(query_texto):
+    """
+    Busca filmes no banco que contenham o texto informado.
+    Usa ILIKE para ignorar maiúsculas/minúsculas.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # O % envolve o texto para buscar em qualquer parte (começo, meio ou fim)
+    termo_busca = f"%{query_texto}%"
+    
+    sql = """
+        SELECT movie_id, title, release_date 
+        FROM movies 
+        WHERE title ILIKE %s 
+        LIMIT 5;
+    """
+    
+    cur.execute(sql, (termo_busca,))
+    resultados = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    # Formata para JSON
+    lista_filmes = []
+    for row in resultados:
+        lista_filmes.append({
+            "id": row[0],
+            "titulo": row[1],
+            "ano": row[2].year if row[2] else "N/A"
+        })
+        
+    return lista_filmes
+
 if __name__ == "__main__":
     # Teste rápido ao rodar o arquivo diretamente
-    print("--- Teste de Recomendação ---")
+    print("Teste de Recomendação")
     dados_atores, dados_generos, dados_diretores, dados_keywords = carregar_dados_grafo()
     grafo = construir_grafo(dados_atores, dados_generos, dados_diretores, dados_keywords)
     print(recomendar_filmes(grafo, 278))

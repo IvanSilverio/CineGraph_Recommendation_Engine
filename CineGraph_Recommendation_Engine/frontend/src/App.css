@@ -1,42 +1,147 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
+/* O Container Principal */
+.container {
+  width: 100%;
+  max-width: 1200px;
   padding: 2rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Cabeçalho Específico do App */
+header h1 {
+  margin-bottom: 0.5rem;
+  /* Efeito Degrade no Título */
+  background: linear-gradient(to right, #646cff, #9089fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
+header p {
   color: #888;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+/* Caixa de Busca */
+.search-box {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+input {
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background-color: var(--card-bg); /* Usa a variável do index.css */
+  color: white;
+  width: 250px;
+  transition: border-color 0.25s;
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: 600;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.25s, transform 0.1s;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+/* Grid de Resultados */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+/* Cartão do Filme */
+.movie-card {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--primary-color);
+}
+
+.poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+}
+
+.info {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  align-items: center;
+}
+
+.info h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.year {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* Badge de Score */
+.score-badge {
+  background-color: #2e1065;
+  color: #a5b4fc;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border: 1px solid #4f46e5;
+  margin-top: auto;
+}
+
+/* Mensagens */
+.error-msg {
+  color: #ff6b6b;
+  background: rgba(255, 0, 0, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ff6b6b;
+}
+
+.hint {
+  margin-top: 50px;
+  color: #555;
+  font-style: italic;
 }
