@@ -66,9 +66,11 @@ O sistema atribui "pesos" diferentes para cada tipo de conexão, priorizando a v
 
 ### 1. Configuração do Backend
 
-Clone o repositório e configure o ambiente:
+Clone o repositório, acesse a pasta do servidor e configure o ambiente:
 
 ```bash
+cd backend
+
 # Crie e ative um ambiente virtual
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -77,3 +79,59 @@ venv\Scripts\activate     # Windows
 
 # Instale as dependências
 pip install fastapi uvicorn requests psycopg2-binary networkx python-dotenv
+
+```
+
+#### 🔐 Configurando Variáveis de Ambiente (.env)
+
+Crie um arquivo chamado `.env` dentro da pasta `backend` e preencha com suas credenciais:
+
+```env
+# Configurações do Banco de Dados
+DB_HOST=localhost
+DB_NAME=cinegraph
+DB_USER=postgres
+DB_PASSWORD=sua_senha
+DB_PORT=5432
+
+# API Externa (The Movie DB)
+TMDB_API_KEY=sua_chave_api_do_tmdb_aqui
+
+```
+
+#### ▶️ Rodando a API
+
+Com o ambiente ativado e configurado, inicie o servidor:
+
+```bash
+uvicorn main:app --reload
+
+```
+
+A API estará rodando em: `http://localhost:8000`
+
+---
+
+### 2. Configuração do Frontend
+
+Em um novo terminal, acesse a pasta do frontend:
+
+```bash
+cd frontend
+
+```
+
+Instale as dependências e inicie o projeto:
+
+```bash
+# Instalar pacotes
+npm install
+
+# Rodar em modo de desenvolvimento
+npm run dev
+
+```
+
+Acesse a aplicação no navegador (geralmente em `http://localhost:5173` ou `http://localhost:3000`).
+
+```
